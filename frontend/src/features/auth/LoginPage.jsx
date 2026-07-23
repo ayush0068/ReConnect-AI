@@ -1,17 +1,32 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { loginSchema } from './auth.schemas.js';
+import apiClient from '../../lib/apiClient.js';
 
 export default function LoginPage() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const justRegistered = searchParams.get('registered') === 'true';
+  const [serverError, setServerError] = useState(null);
+
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(loginSchema),
   });
 
   const onSubmit = async (data) => {
-    // TODO: wire up to POST /api/v1/auth/login once the backend is implemented
-    console.log('login submit', data);
+    setServerError(null);
+    try {
+      const res = await apiClient.post('/auth/login', data);
+      localStorage.setItem('accessToken', res.data.data.accessToken);
+      navigate('/'); // redirect to role-specific dashboard once those routes exist
+    } catch (err) {
+      const message =
+        err.response?.data?.error?.message || 'Sign in failed. Please try again.';
+      setServerError(message);
+    }
   };
 
   return (
@@ -24,6 +39,17 @@ export default function LoginPage() {
       >
         <p className="font-mono text-xs uppercase tracking-widest text-trust mb-2">Sign in</p>
         <h1 className="font-display text-2xl mb-8">Welcome back.</h1>
+
+        {justRegistered && !serverError && (
+          <div className="mb-5 rounded-xl border border-verified/30 bg-verified/10 px-4 py-3 text-sm text-verified">
+            Account created — sign in to continue.
+          </div>
+        )}
+        {serverError && (
+          <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {serverError}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div>

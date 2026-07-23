@@ -1,20 +1,35 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { registerSchema } from './auth.schemas.js';
+import apiClient from '../../lib/apiClient.js';
 
 export default function RegisterPage() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const role = searchParams.get('role') || 'family';
+  const [serverError, setServerError] = useState(null);
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(registerSchema),
   });
 
   const onSubmit = async (data) => {
-    // TODO: wire up to POST /api/v1/auth/register once the backend is implemented
-    console.log('register submit', { ...data, role });
+    setServerError(null);
+    try {
+      await apiClient.post('/auth/register', { ...data, role });
+      // Registration succeeded — send them to sign in.
+      // (Once /auth/login also returns an access token here, this can
+      // instead log them in directly and redirect to their dashboard.)
+      navigate('/login?registered=true');
+    } catch (err) {
+      const message =
+        err.response?.data?.error?.message ||
+        'Something went wrong creating your account. Please try again.';
+      setServerError(message);
+    }
   };
 
   return (
@@ -29,6 +44,12 @@ export default function RegisterPage() {
           Create account · {role}
         </p>
         <h1 className="font-display text-2xl mb-8">Let's get you set up.</h1>
+
+        {serverError && (
+          <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {serverError}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div>
