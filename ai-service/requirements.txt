@@ -4,13 +4,21 @@ pydantic>=2.8.2
 pydantic-settings>=2.3.4
 python-jose[cryptography]==3.3.0
 python-multipart>=0.0.9
-numpy>=2.1.0
-pandas>=2.2.3
-scikit-learn>=1.5.2
-faiss-cpu>=1.11.0
-torch>=2.5.1
-torchvision>=0.20.1
-opencv-python-headless>=4.10.0.84
+numpy>=1.24.0,<2.0.0
+pandas==2.2.2
+scikit-learn==1.5.1
+faiss-cpu==1.8.0
+torch>=2.2.0,<=2.3.0
+torchvision>=0.17.0,<=0.18.0
+opencv-python-headless==4.10.0.84
 sentence-transformers>=3.0.1
 ultralytics>=8.2.58
 requests>=2.32.3
+
+# NOTE (Python 3.13 on Windows): the ML packages above are pinned as floors,
+# not exact versions, because faiss-cpu/torch/numpy only started shipping
+# prebuilt cp313 Windows wheels partway through their release history.
+# Pinning exact old versions forces pip to compile from source, which needs
+# a C/C++ compiler (Visual Studio Build Tools) that most machines don't have.
+# If you need fully reproducible builds later, run `pip freeze > requirements.lock.txt`
+# once everything installs cleanly in your environment.

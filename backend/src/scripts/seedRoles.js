@@ -11,7 +11,18 @@ import { env } from '../config/env.js';
 import Role from '../models/Role.model.js';
 
 const roles = [
-  { name: 'family', permissions: ['case:create', 'case:update-own', 'case:view-own'] },
+  // 'family' is the single shared role for any ordinary registered person —
+  // reporting a missing person and reporting a sighting are just two
+  // features available to the same account, not two different identities
+  // chosen at signup. See auth.validation.js / auth.service.js: public
+  // self-registration always assigns this role now.
+  {
+    name: 'family',
+    permissions: ['case:create', 'case:update-own', 'case:view-own', 'sighting:create'],
+  },
+  // 'citizen' is kept seeded so any existing accounts with this role
+  // (from before the family/citizen merge) keep working unchanged — it is
+  // no longer assigned to new registrations.
   { name: 'citizen', permissions: ['sighting:create'] },
   {
     name: 'police',

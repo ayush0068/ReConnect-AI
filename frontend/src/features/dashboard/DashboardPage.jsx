@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import apiClient from '../../lib/apiClient.js';
 
@@ -19,6 +19,15 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const justReported = searchParams.get('reported'); // 'missing-person' | 'sighting'
+
+  // This route is the single place everything in the app points to
+  // ("go to your dashboard") — it decides where each role actually
+  // belongs, instead of every login/link needing to know that itself.
+  // Add one branch here per future role (hospital/ngo/admin) as their
+  // dashboards get built; nothing below this needs to change.
+  if (user?.role === 'police') {
+    return <Navigate to="/police/dashboard" replace />;
+  }
 
   const missingPersonsQuery = useQuery({
     queryKey: ['missing-persons', 'mine'],

@@ -2,16 +2,14 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { registerSchema } from './auth.schemas.js';
 import apiClient from '../../lib/apiClient.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 
 export default function RegisterPage() {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { login } = useAuth();
-  const role = searchParams.get('role') || 'family';
   const [serverError, setServerError] = useState(null);
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
@@ -21,7 +19,7 @@ export default function RegisterPage() {
   const onSubmit = async (data) => {
     setServerError(null);
     try {
-      await apiClient.post('/auth/register', { ...data, role });
+      await apiClient.post('/auth/register', data);
 
       // Registration doesn't return a session by itself, so immediately sign
       // the new user in with the same credentials and drop them on their
@@ -49,7 +47,7 @@ export default function RegisterPage() {
         className="w-full max-w-sm"
       >
         <p className="font-mono text-xs uppercase tracking-widest text-trust mb-2">
-          Create account · {role}
+          Create account
         </p>
         <h1 className="font-display text-2xl mb-8">Let's get you set up.</h1>
 

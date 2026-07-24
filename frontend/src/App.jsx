@@ -4,6 +4,7 @@ import HomePage from './features/home/HomePage.jsx';
 import LoginPage from './features/auth/LoginPage.jsx';
 import RegisterPage from './features/auth/RegisterPage.jsx';
 import DashboardPage from './features/dashboard/DashboardPage.jsx';
+import PoliceDashboardPage from './features/police/PoliceDashboardPage.jsx';
 import ReportMissingPersonPage from './features/missingPersons/ReportMissingPersonPage.jsx';
 import MissingPersonDetailPage from './features/missingPersons/MissingPersonDetailPage.jsx';
 import ReportSightingPage from './features/sightings/ReportSightingPage.jsx';
@@ -21,6 +22,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/police/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['police']}>
+              <PoliceDashboardPage />
             </ProtectedRoute>
           }
         />

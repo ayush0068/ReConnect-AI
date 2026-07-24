@@ -6,17 +6,27 @@ import { AppError } from '../../utils/AppError.js';
 
 const SALT_ROUNDS = 12;
 
-export async function registerUser({ fullName, email, phone, password, role }) {
+// Every public self-registration becomes this role — see the comment in
+// auth.validation.js for why there's no role choice at signup anymore.
+// Organization roles (police/hospital/ngo/shelter) are never created
+// through this function; they need their own registration path plus
+// admin verification before becoming active (not yet implemented — see
+// docs/01_System_Architecture.md open decisions). Until that exists,
+// organization accounts are bootstrapped directly, e.g. via
+// scripts/seedPoliceUser.js.
+const PUBLIC_SELF_REGISTER_ROLE = 'family';
+
+export async function registerUser({ fullName, email, phone, password }) {
   const existing = await User.findOne({ email });
   if (existing) {
     throw new AppError('An account with this email already exists', 409, 'EMAIL_IN_USE');
   }
 
-  const roleDoc = await Role.findOne({ name: role });
+  const roleDoc = await Role.findOne({ name: PUBLIC_SELF_REGISTER_ROLE });
   if (!roleDoc) {
     // Should only happen if the Role collection hasn't been seeded yet.
     throw new AppError(
-      `Role "${role}" not found — run the role seed script first`,
+      `Role "${PUBLIC_SELF_REGISTER_ROLE}" not found — run the role seed script first`,
       500,
       'ROLE_NOT_SEEDED'
     );
