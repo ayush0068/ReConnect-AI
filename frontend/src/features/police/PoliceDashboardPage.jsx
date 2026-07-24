@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import apiClient from '../../lib/apiClient.js';
+import SightingsMapView from '../../components/map/SightingsMapView.jsx';
 
 const STATUS_LABEL = {
   pending_embedding: 'Processing',
@@ -78,6 +79,25 @@ export default function PoliceDashboardPage() {
           Verify citizen sighting reports and oversee active missing person cases. AI-suggested
           match review will appear here once the matching pipeline is wired up.
         </p>
+
+        {/* Live map — every pinned sighting and missing-person case */}
+        <section className="mb-12">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-display text-lg">Map view</h2>
+            <span className="text-xs font-mono uppercase tracking-wide text-ink-faint">
+              signal = missing person · verified = sighting
+            </span>
+          </div>
+          {(sightingsQuery.isLoading || missingPersonsQuery.isLoading) && (
+            <p className="text-sm text-ink-faint">Loading map…</p>
+          )}
+          {!sightingsQuery.isLoading && !missingPersonsQuery.isLoading && (
+            <SightingsMapView
+              sightings={sightingsQuery.data || []}
+              missingPersons={missingPersonsQuery.data || []}
+            />
+          )}
+        </section>
 
         {/* Sighting verification queue */}
         <section className="mb-12">

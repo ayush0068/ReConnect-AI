@@ -6,6 +6,9 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { missingPersonSchema } from './missingPerson.schemas.js';
 import apiClient from '../../lib/apiClient.js';
+import LocationPicker from '../../components/map/LocationPicker.jsx';
+import LocationDisplayMap from '../../components/map/LocationDisplayMap.jsx';
+import { missingPersonIcon } from '../../lib/mapIcons.js';
 
 const inputClass =
   'w-full rounded-xl border border-line bg-paper px-4 py-2.5 text-sm focus:border-trust transition-colors duration-200';
@@ -40,7 +43,7 @@ export default function MissingPersonDetailPage() {
     },
   });
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+  const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(missingPersonSchema),
     values: mp
       ? {
@@ -52,11 +55,22 @@ export default function MissingPersonDetailPage() {
           descriptionText: mp.descriptionText || '',
           identifyingMarksText: (mp.identifyingMarks || []).join(', '),
           lastKnownAddress: mp.lastKnownLocation?.address || '',
+          latitude: mp.lastKnownLocation?.coordinates?.[1],
+          longitude: mp.lastKnownLocation?.coordinates?.[0],
           lastSeenAt: toDateInputValue(mp.lastSeenAt),
           photoUrl: mp.photos?.[0] || '',
         }
       : undefined,
   });
+
+  const latitude = watch('latitude');
+  const longitude = watch('longitude');
+
+  const handleLocationChange = ({ lat, lng, address }) => {
+    setValue('latitude', lat, { shouldValidate: true });
+    setValue('longitude', lng, { shouldValidate: true });
+    if (address) setValue('lastKnownAddress', address, { shouldValidate: true });
+  };
 
   const onSubmit = async (data) => {
     setServerError(null);
@@ -69,6 +83,8 @@ export default function MissingPersonDetailPage() {
         clothingDescription: data.clothingDescription,
         descriptionText: data.descriptionText,
         lastKnownAddress: data.lastKnownAddress || undefined,
+        latitude: data.latitude,
+        longitude: data.longitude,
         lastSeenAt: data.lastSeenAt || undefined,
         identifyingMarks: data.identifyingMarksText
           ? data.identifyingMarksText.split(',').map((s) => s.trim()).filter(Boolean)
@@ -209,6 +225,17 @@ export default function MissingPersonDetailPage() {
             </div>
 
             <div>
+              <label className={labelClass}>Pin the last known location on the map</label>
+              <LocationPicker
+                latitude={latitude}
+                longitude={longitude}
+                onLocationChange={handleLocationChange}
+              />
+              <input type="hidden" {...register('latitude', { valueAsNumber: true })} />
+              <input type="hidden" {...register('longitude', { valueAsNumber: true })} />
+            </div>
+
+            <div>
               <label htmlFor="photoUrl" className={labelClass}>Photo URL</label>
               <input id="photoUrl" {...register('photoUrl')} className={inputClass} />
               {errors.photoUrl && <p className="text-xs text-red-500 mt-1">{errors.photoUrl.message}</p>}
@@ -291,7 +318,13 @@ export default function MissingPersonDetailPage() {
 
             <div>
               <p className="text-ink-faint text-sm mb-1">Last known location</p>
-              <p className="text-sm leading-relaxed">{mp.lastKnownLocation?.address || '—'}</p>
+              <p className="text-sm leading-relaxed mb-2">{mp.lastKnownLocation?.address || '—'}</p>
+              <LocationDisplayMap
+                latitude={mp.lastKnownLocation?.coordinates?.[1]}
+                longitude={mp.lastKnownLocation?.coordinates?.[0]}
+                label={mp.lastKnownLocation?.address}
+                icon={missingPersonIcon}
+              />
             </div>
           </div>
         )}

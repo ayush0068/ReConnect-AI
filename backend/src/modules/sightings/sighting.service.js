@@ -2,15 +2,23 @@ import Sighting from '../../models/Sighting.model.js';
 import { AppError } from '../../utils/AppError.js';
 
 export async function createSighting(reqUser, data) {
-  const { locationAddress, isAnonymous, ...rest } = data;
+  const { locationAddress, latitude, longitude, isAnonymous, ...rest } = data;
 
   const reportedByAnonymousChoice = isAnonymous || !reqUser;
+  const hasCoordinates = typeof latitude === 'number' && typeof longitude === 'number';
 
   const sighting = await Sighting.create({
     ...rest,
     reportedBy: reportedByAnonymousChoice ? null : reqUser.id,
     isAnonymous: reportedByAnonymousChoice,
-    location: locationAddress ? { address: locationAddress } : undefined,
+    location:
+      locationAddress || hasCoordinates
+        ? {
+            address: locationAddress,
+            // Stored as [longitude, latitude] to match the 2dsphere index.
+            coordinates: hasCoordinates ? [longitude, latitude] : undefined,
+          }
+        : undefined,
   });
 
   return sighting;

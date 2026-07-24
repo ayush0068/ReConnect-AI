@@ -17,6 +17,10 @@ const missingPersonSchema = new mongoose.Schema(
     descriptionText: { type: String, required: true, trim: true },
     lastKnownLocation: {
       address: { type: String, trim: true },
+      // [longitude, latitude] — legacy coordinate pair format, indexable
+      // by a 2dsphere index (see Database Design doc). Set from the
+      // Leaflet location picker on the report/edit forms.
+      coordinates: { type: [Number], default: undefined },
     },
     lastSeenAt: { type: Date },
     // AI status lifecycle per the Database Design doc — embedding/matching
@@ -34,5 +38,7 @@ const missingPersonSchema = new mongoose.Schema(
 
 missingPersonSchema.index({ reportedBy: 1 });
 missingPersonSchema.index({ status: 1 });
+// Powers map views and proximity lookups per the Database Design doc.
+missingPersonSchema.index({ 'lastKnownLocation.coordinates': '2dsphere' });
 
 export default mongoose.model('MissingPerson', missingPersonSchema);

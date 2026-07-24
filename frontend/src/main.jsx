@@ -5,6 +5,8 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import queryClient from './lib/queryClient.js';
 import { AuthProvider } from './context/AuthContext.jsx';
 import App from './App.jsx';
+import 'leaflet/dist/leaflet.css';
+import './lib/leafletSetup.js';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(

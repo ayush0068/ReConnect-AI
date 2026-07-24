@@ -33,8 +33,8 @@ import User from '../models/User.model.js';
 
 const SALT_ROUNDS = 12;
 
-const email = process.env.POLICE_SEED_EMAIL || 'police.demo@reconnect.local';
-const password = process.env.POLICE_SEED_PASSWORD || 'ChangeMe123!';
+const email = process.env.POLICE_SEED_EMAIL || 'police@gmail.com';
+const password = process.env.POLICE_SEED_PASSWORD || 'police1234';
 const fullName = process.env.POLICE_SEED_FULL_NAME || 'Demo Police Officer';
 
 async function seed() {

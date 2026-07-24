@@ -10,6 +10,10 @@ export const createMissingPersonSchema = z.object({
   clothingDescription: z.string().optional(),
   descriptionText: z.string().min(10, 'Add a short description (at least 10 characters)'),
   lastKnownAddress: z.string().optional(),
+  // Set by the Leaflet location picker on the frontend — current
+  // location, typed place name (geocoded), or a dragged pin.
+  latitude: z.coerce.number().min(-90, 'Invalid latitude').max(90, 'Invalid latitude').optional(),
+  longitude: z.coerce.number().min(-180, 'Invalid longitude').max(180, 'Invalid longitude').optional(),
   lastSeenAt: z.coerce.date().optional(),
 });
 

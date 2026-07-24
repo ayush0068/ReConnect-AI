@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { missingPersonSchema } from './missingPerson.schemas.js';
 import apiClient from '../../lib/apiClient.js';
+import LocationPicker from '../../components/map/LocationPicker.jsx';
 
 const inputClass =
   'w-full rounded-xl border border-line bg-paper px-4 py-2.5 text-sm focus:border-trust transition-colors duration-200';
@@ -14,10 +15,19 @@ export default function ReportMissingPersonPage() {
   const navigate = useNavigate();
   const [serverError, setServerError] = useState(null);
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+  const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(missingPersonSchema),
     defaultValues: { gender: 'unknown' },
   });
+
+  const latitude = watch('latitude', undefined);
+  const longitude = watch('longitude', undefined);
+
+  const handleLocationChange = ({ lat, lng, address }) => {
+    setValue('latitude', lat, { shouldValidate: true });
+    setValue('longitude', lng, { shouldValidate: true });
+    if (address) setValue('lastKnownAddress', address, { shouldValidate: true });
+  };
 
   const onSubmit = async (data) => {
     setServerError(null);
@@ -30,6 +40,8 @@ export default function ReportMissingPersonPage() {
         clothingDescription: data.clothingDescription,
         descriptionText: data.descriptionText,
         lastKnownAddress: data.lastKnownAddress || undefined,
+        latitude: data.latitude,
+        longitude: data.longitude,
         lastSeenAt: data.lastSeenAt || undefined,
         identifyingMarks: data.identifyingMarksText
           ? data.identifyingMarksText.split(',').map((s) => s.trim()).filter(Boolean)
@@ -127,6 +139,17 @@ export default function ReportMissingPersonPage() {
               <label htmlFor="lastSeenAt" className={labelClass}>Last seen on</label>
               <input id="lastSeenAt" type="date" {...register('lastSeenAt')} className={inputClass} />
             </div>
+          </div>
+
+          <div>
+            <label className={labelClass}>Pin the last known location on the map</label>
+            <LocationPicker
+              latitude={latitude}
+              longitude={longitude}
+              onLocationChange={handleLocationChange}
+            />
+            <input type="hidden" {...register('latitude', { valueAsNumber: true })} />
+            <input type="hidden" {...register('longitude', { valueAsNumber: true })} />
           </div>
 
           <div>

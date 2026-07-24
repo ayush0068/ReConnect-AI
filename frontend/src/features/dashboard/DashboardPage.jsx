@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import apiClient from '../../lib/apiClient.js';
+import SightingsMapView from '../../components/map/SightingsMapView.jsx';
 
 const STATUS_LABEL = {
   pending_embedding: 'Processing',
@@ -74,6 +75,32 @@ export default function DashboardPage() {
             Your sighting report was submitted. It appears below.
           </div>
         )}
+
+        {(() => {
+          const hasAnyPin =
+            missingPersonsQuery.data?.some((mp) => mp.lastKnownLocation?.coordinates) ||
+            sightingsQuery.data?.some((s) => s.location?.coordinates);
+          if (missingPersonsQuery.isLoading || sightingsQuery.isLoading || !hasAnyPin) {
+            return null;
+          }
+          return (
+            <section className="mb-12">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-display text-lg">Your reports on the map</h2>
+                <span className="text-xs font-mono uppercase tracking-wide text-ink-faint">
+                  signal = missing person · verified = sighting
+                </span>
+              </div>
+              <SightingsMapView
+                sightings={sightingsQuery.data || []}
+                missingPersons={missingPersonsQuery.data || []}
+              />
+              <p className="text-xs text-ink-faint mt-2">
+                Police can see these same pinned locations for your reports.
+              </p>
+            </section>
+          );
+        })()}
 
         <section className="mb-12">
           <div className="flex items-center justify-between mb-4">

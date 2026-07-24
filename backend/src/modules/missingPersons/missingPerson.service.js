@@ -4,12 +4,20 @@ import { AppError } from '../../utils/AppError.js';
 const VIEW_ALL_ROLES = ['police', 'admin'];
 
 export async function createMissingPerson(reportedById, data) {
-  const { lastKnownAddress, ...rest } = data;
+  const { lastKnownAddress, latitude, longitude, ...rest } = data;
+  const hasCoordinates = typeof latitude === 'number' && typeof longitude === 'number';
 
   const missingPerson = await MissingPerson.create({
     ...rest,
     reportedBy: reportedById,
-    lastKnownLocation: lastKnownAddress ? { address: lastKnownAddress } : undefined,
+    lastKnownLocation:
+      lastKnownAddress || hasCoordinates
+        ? {
+            address: lastKnownAddress,
+            // Stored as [longitude, latitude] to match the 2dsphere index.
+            coordinates: hasCoordinates ? [longitude, latitude] : undefined,
+          }
+        : undefined,
   });
 
   return missingPerson;
@@ -54,10 +62,17 @@ export async function updateMissingPerson(id, user, data) {
   }
   assertCanAccess(record, user);
 
-  const { lastKnownAddress, ...rest } = data;
+  const { lastKnownAddress, latitude, longitude, ...rest } = data;
   Object.assign(record, rest);
-  if (lastKnownAddress !== undefined) {
-    record.lastKnownLocation = { address: lastKnownAddress };
+
+  const hasCoordinates = typeof latitude === 'number' && typeof longitude === 'number';
+  if (lastKnownAddress !== undefined || hasCoordinates) {
+    record.lastKnownLocation = {
+      address: lastKnownAddress !== undefined ? lastKnownAddress : record.lastKnownLocation?.address,
+      coordinates: hasCoordinates
+        ? [longitude, latitude]
+        : record.lastKnownLocation?.coordinates,
+    };
   }
 
   await record.save();

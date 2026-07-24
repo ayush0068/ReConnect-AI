@@ -6,6 +6,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { sightingSchema } from './sighting.schemas.js';
 import apiClient from '../../lib/apiClient.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import LocationPicker from '../../components/map/LocationPicker.jsx';
 
 const inputClass =
   'w-full rounded-xl border border-line bg-paper px-4 py-2.5 text-sm focus:border-trust transition-colors duration-200';
@@ -17,10 +18,19 @@ export default function ReportSightingPage() {
   const [serverError, setServerError] = useState(null);
   const [submitted, setSubmitted] = useState(false);
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+  const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(sightingSchema),
     defaultValues: { isAnonymous: false },
   });
+
+  const latitude = watch('latitude');
+  const longitude = watch('longitude');
+
+  const handleLocationChange = ({ lat, lng, address }) => {
+    setValue('latitude', lat, { shouldValidate: true });
+    setValue('longitude', lng, { shouldValidate: true });
+    if (address) setValue('locationAddress', address, { shouldValidate: true });
+  };
 
   const onSubmit = async (data) => {
     setServerError(null);
@@ -28,6 +38,8 @@ export default function ReportSightingPage() {
       const payload = {
         description: data.description,
         locationAddress: data.locationAddress || undefined,
+        latitude: data.latitude,
+        longitude: data.longitude,
         sightedAt: data.sightedAt || undefined,
         photos: data.photoUrl ? [data.photoUrl] : [],
         isAnonymous: isAuthenticated ? data.isAnonymous : true,
@@ -115,6 +127,17 @@ export default function ReportSightingPage() {
               <label htmlFor="sightedAt" className={labelClass}>When</label>
               <input id="sightedAt" type="datetime-local" {...register('sightedAt')} className={inputClass} />
             </div>
+          </div>
+
+          <div>
+            <label className={labelClass}>Pin the exact spot on the map</label>
+            <LocationPicker
+              latitude={latitude}
+              longitude={longitude}
+              onLocationChange={handleLocationChange}
+            />
+            <input type="hidden" {...register('latitude', { valueAsNumber: true })} />
+            <input type="hidden" {...register('longitude', { valueAsNumber: true })} />
           </div>
 
           <div>
